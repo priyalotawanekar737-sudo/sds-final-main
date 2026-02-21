@@ -1,4 +1,4 @@
-const Donation = require("../models/Donation"); 
+const Donation = require("../models/Donation");
 const Users = require("../models/User");
 const mongoose = require("mongoose");
 
@@ -6,26 +6,27 @@ const mongoose = require("mongoose");
 exports.getVolunteerDashboard = async (req, res) => {
   try {
     const volunteerId = new mongoose.Types.ObjectId(req.user.id); // from JWT middleware
-    const approvedDonors = await Users.find({ role: "donor", approved: true });
-    const onGoingDonors = await Users.find({ role: "donor", approved: false });
+    const totalDonations = await Donation.countDocuments();
+    const approvedDonors = await Donation.find({ status: "accepted" });
+    const onGoingDonors = await Donation.find({ status: "pending" });
 
     // Fetch all assigned/accepted donations not assigned to this volunteer (available pool)
-    const allAssigned = await Donation.find({ 
-      status: { $in: ["accepted", "assigned"] }, 
-      volunteerId: { $ne: volunteerId } 
+    const allAssigned = await Donation.find({
+      status: { $in: ["accepted", "assigned", "pending"] },
+      volunteerId: { $ne: volunteerId }
     })
       .populate("donor", "name")
       .sort({ createdAt: -1 });
 
     // Fetch volunteer's donations (assigned, ongoing, completed)
-    const myDonations = await Donation.find({ 
-      volunteerId, 
-      status: { $in: ["accepted", "assigned", "on_the_way", "collected", "delivered"] } 
+    const myDonations = await Donation.find({
+      volunteerId,
+      status: { $in: ["accepted", "assigned", "pending", "on_the_way", "collected", "delivered"] }
     })
       .populate("donor", "name")
       .sort({ createdAt: -1 });
 
-     
+
     console.log("approvedDonors", approvedDonors);
     console.log("onGoingDonors", onGoingDonors);
     console.log("User ID from JWT:", req.user.id);
@@ -51,9 +52,10 @@ exports.getVolunteerDashboard = async (req, res) => {
 
     // Compute dashboard counts
     const summary = {
-      assigned: allAssigned.length + myDonations.filter(d => d.status === "accepted" || d.status === "assigned").length,
+      // assigned: allAssigned.length + myDonations.filter(d => d.status === "accepted" || d.status === "assigned" || d.status === "pending").length,
+      assigned: totalDonations,
       ongoing: onGoingDonors.length,
-      completed: myDonations.filter(d => d.status === "delivered").length
+      completed: myDonations.filter(d => d.status === "delivered" || d.status === "accepted").length
     };
 
     res.json({
