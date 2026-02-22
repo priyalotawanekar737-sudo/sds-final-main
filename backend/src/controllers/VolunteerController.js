@@ -69,6 +69,22 @@ exports.getVolunteerDashboard = async (req, res) => {
   }
 };
 
+// GET all donations with full details
+exports.getAllDonations = async (req, res) => {
+  try {
+    const donations = await Donation.find()
+      .populate("donor", "name email")
+      .populate("acceptedBy", "name email")
+      .populate("volunteerId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json({ donations });
+  } catch (err) {
+    console.error("Error in getAllDonations:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // UPDATE donation status
 exports.updateDonationStatus = async (req, res) => {
   try {

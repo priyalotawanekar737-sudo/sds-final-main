@@ -14,6 +14,9 @@ function volunteerOnly(req, res, next) {
 // Dashboard route
 router.get("/dashboard", auth, volunteerOnly, volunteerController.getVolunteerDashboard);
 
+// Get all donations with full details
+router.get("/all-donations", auth, volunteerOnly, volunteerController.getAllDonations);
+
 // Update donation status
 router.put("/donation/:id/status", auth, volunteerOnly, volunteerController.updateDonationStatus);
 

@@ -21,7 +21,6 @@ api.interceptors.request.use(
 );
 
 /* ================= RESPONSE INTERCEPTOR ================= */
-// 🚫 Auto logout on token expiry / unauthorized
 api.interceptors.response.use(
   (response) => response,
   (error) => {

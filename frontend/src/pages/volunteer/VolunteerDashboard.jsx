@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Package, X, Eye } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import UploadIcon from "../../icons/UploadIcon";
@@ -20,6 +20,12 @@ export default function VolunteerDashboard() {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const inputRef = useRef();
+
+  // Donations view state
+  const [activeView, setActiveView] = useState("dashboard"); // "dashboard" or "donations"
+  const [allDonations, setAllDonations] = useState([]);
+  const [loadingDonations, setLoadingDonations] = useState(false);
+  const [viewImage, setViewImage] = useState(null); // for image modal
 
   // ================= IMAGE HANDLERS =================
 
@@ -72,6 +78,27 @@ export default function VolunteerDashboard() {
     fetchDonations();
   }, []);
 
+  // ================= FETCH ALL DONATIONS =================
+  const fetchAllDonations = async () => {
+    setLoadingDonations(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/volunteer/all-donations", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await res.json();
+      setAllDonations(data.donations || []);
+    } catch (error) {
+      console.error("Error fetching all donations:", error);
+    } finally {
+      setLoadingDonations(false);
+    }
+  };
+
+  const handleDonationsClick = () => {
+    setActiveView("donations");
+    fetchAllDonations();
+  };
+
   // ================= STATUS UPDATE =================
   const handleStatusClick = async (donation) => {
     const currentIndex = statusFlow.indexOf(donation.status);
@@ -111,7 +138,12 @@ export default function VolunteerDashboard() {
       <aside className="w-64 bg-white shadow-lg p-6">
         <h2 className="text-2xl font-bold text-green-600 mb-8">Volunteer Panel</h2>
         <ul className="space-y-4 text-gray-700">
-          <li className="font-semibold">Dashboard</li>
+          <li
+            className={`font-semibold cursor-pointer px-3 py-2 rounded-lg transition ${activeView === "dashboard" ? "bg-green-50 text-green-700" : "hover:bg-gray-100"}`}
+            onClick={() => setActiveView("dashboard")}
+          >
+            Dashboard
+          </li>
           <li className="font-semibold">
             <label className="flex items-center gap-2 text-gray-700 font-medium mb-3 cursor-pointer">
               <UploadIcon size={16} />
@@ -129,6 +161,13 @@ export default function VolunteerDashboard() {
               </p>
             )}
           </li>
+          <li
+            className={`font-semibold cursor-pointer px-3 py-2 rounded-lg transition flex items-center gap-2 ${activeView === "donations" ? "bg-green-50 text-green-700" : "hover:bg-gray-100"}`}
+            onClick={handleDonationsClick}
+          >
+            <Package size={16} />
+            Donations
+          </li>
 
         </ul>
         <button onClick={handleLogout} className="mt-10 flex items-center gap-2 text-red-500">
@@ -141,65 +180,157 @@ export default function VolunteerDashboard() {
         <h1 className="text-3xl font-bold mb-1">Welcome, {user.name} 🙌</h1>
         <p className="text-gray-600 mb-8">Email: {user.email}</p>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-blue-500 text-white p-6 rounded-xl shadow">
-            <h4>Total Donors</h4>
-            <p className="text-3xl mt-2">{counts.assigned}</p>
-          </div>
-          <div className="bg-yellow-500 text-white p-6 rounded-xl shadow">
-            <h4>Ongoing Donations</h4>
-            <p className="text-3xl mt-2">{counts.ongoing}</p>
-          </div>
-          <div className="bg-green-600 text-white p-6 rounded-xl shadow">
-            <h4>Completed Donations</h4>
-            <p className="text-3xl mt-2">{counts.completed}</p>
-          </div>
-        </div>
-
-        {/* Donations */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {donations.length === 0 && <p className="text-gray-500">No donations assigned yet.</p>}
-
-          {donations.map((donation) => (
-            <div key={donation._id} className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="font-semibold text-gray-800 mb-2">Donor: {donation.donorName}</h3>
-              <p className="text-sm text-gray-500 mb-4">Location: {donation.location}</p>
-
-              <div className="flex gap-2 mb-4">
-                {steps.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-2 flex-1 rounded-full ${statusFlow.indexOf(donation.status) >= index
-                      ? "bg-green-500"
-                      : "bg-gray-300"
-                      }`}
-                  />
-                ))}
+        {activeView === "dashboard" ? (
+          <>
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-blue-500 text-white p-6 rounded-xl shadow">
+                <h4>Total Donors</h4>
+                <p className="text-3xl mt-2">{counts.assigned}</p>
               </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {steps.map((label, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleStatusClick(donation)}
-                    // disabled={statusFlow.indexOf(donation.status) !== index}
-                    className={`py-2 px-3 rounded-lg transition ${statusFlow.indexOf(donation.status) > index
-                      ? "bg-green-100 text-green-700 font-medium"
-                      : "bg-gray-100 text-gray-500"
-                      } ${statusFlow.indexOf(donation.status) === index
-                        ? "ring-2 ring-green-400"
-                        : ""
-                      }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <div className="bg-yellow-500 text-white p-6 rounded-xl shadow">
+                <h4>Ongoing Donations</h4>
+                <p className="text-3xl mt-2">{counts.ongoing}</p>
+              </div>
+              <div className="bg-green-600 text-white p-6 rounded-xl shadow">
+                <h4>Completed Donations</h4>
+                <p className="text-3xl mt-2">{counts.completed}</p>
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Donations */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {donations.length === 0 && <p className="text-gray-500">No donations assigned yet.</p>}
+
+              {donations.map((donation) => (
+                <div key={donation._id} className="bg-white rounded-xl shadow-md p-6">
+                  <h3 className="font-semibold text-gray-800 mb-2">Donor: {donation.donorName}</h3>
+                  <p className="text-sm text-gray-500 mb-4">Location: {donation.location}</p>
+
+                  <div className="flex gap-2 mb-4">
+                    {steps.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`h-2 flex-1 rounded-full ${statusFlow.indexOf(donation.status) >= index
+                          ? "bg-green-500"
+                          : "bg-gray-300"
+                          }`}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {steps.map((label, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleStatusClick(donation)}
+                        className={`py-2 px-3 rounded-lg transition ${statusFlow.indexOf(donation.status) > index
+                          ? "bg-green-100 text-green-700 font-medium"
+                          : "bg-gray-100 text-gray-500"
+                          } ${statusFlow.indexOf(donation.status) === index
+                            ? "ring-2 ring-green-400"
+                            : ""
+                          }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          /* ================= DONATIONS LIST VIEW ================= */
+          <>
+            <h2 className="text-2xl font-bold mb-6">All Donations</h2>
+
+            {loadingDonations ? (
+              <p className="text-gray-500">Loading donations...</p>
+            ) : allDonations.length === 0 ? (
+              <p className="text-gray-500">No donations found.</p>
+            ) : (
+              <div className="overflow-x-auto bg-white rounded-xl shadow-md">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-green-600 text-white">
+                    <tr>
+                      <th className="px-4 py-3">Title</th>
+                      <th className="px-4 py-3">Description</th>
+                      <th className="px-4 py-3">Donor</th>
+                      <th className="px-4 py-3">Location</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Accepted By</th>
+                      <th className="px-4 py-3">Volunteer</th>
+                      <th className="px-4 py-3">Proof Image</th>
+                      <th className="px-4 py-3">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allDonations.map((d) => (
+                      <tr key={d._id} className="border-b hover:bg-gray-50 transition">
+                        <td className="px-4 py-3 font-medium">{d.title}</td>
+                        <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">{d.description}</td>
+                        <td className="px-4 py-3">{d.donor?.name || "N/A"}</td>
+                        <td className="px-4 py-3">{d.city}, {d.state} - {d.pincode}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            d.status === "delivered" ? "bg-green-100 text-green-700" :
+                            d.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                            d.status === "accepted" ? "bg-blue-100 text-blue-700" :
+                            d.status === "assigned" ? "bg-purple-100 text-purple-700" :
+                            d.status === "on_the_way" ? "bg-orange-100 text-orange-700" :
+                            d.status === "collected" ? "bg-teal-100 text-teal-700" :
+                            "bg-gray-100 text-gray-700"
+                          }`}>
+                            {d.status?.replace(/_/g, " ").toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">{d.acceptedBy?.name || "-"}</td>
+                        <td className="px-4 py-3">{d.volunteerId?.name || "-"}</td>
+                        <td className="px-4 py-3">
+                          {d.proofImage ? (
+                            <button
+                              onClick={() => setViewImage(`http://localhost:5000${d.proofImage}`)}
+                              className="flex items-center gap-1 text-green-600 hover:text-green-800 font-medium"
+                            >
+                              <Eye size={16} /> View
+                            </button>
+                          ) : (
+                            <span className="text-gray-400">No image</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">
+                          {new Date(d.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </main>
+
+      {/* ================= IMAGE MODAL ================= */}
+      {viewImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-4 max-w-lg w-full mx-4 relative">
+            <button
+              onClick={() => setViewImage(null)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={24} />
+            </button>
+            <h3 className="text-lg font-semibold mb-3">Proof Image</h3>
+            <img
+              src={viewImage}
+              alt="Donation proof"
+              className="w-full rounded-lg object-contain max-h-[400px]"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
