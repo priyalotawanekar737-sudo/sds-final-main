@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { LogOut, Package, X, Eye } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { LogOut, Package, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import UploadIcon from "../../icons/UploadIcon";
@@ -17,27 +17,17 @@ export default function VolunteerDashboard() {
   const statusFlow = ["assigned", "on_the_way", "collected", "delivered"];
   const steps = ["Pickup Donation", "Donation Picked Up", "Donation Delivered", "Donation Completed"];
 
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const inputRef = useRef();
-
   // Donations view state
   const [activeView, setActiveView] = useState("dashboard"); // "dashboard" or "donations"
-  const [allDonations, setAllDonations] = useState([]);
-  const [loadingDonations, setLoadingDonations] = useState(false);
+  const [myImages, setMyImages] = useState([]);
+  const [loadingImages, setLoadingImages] = useState(false);
   const [viewImage, setViewImage] = useState(null); // for image modal
+  const [uploading, setUploading] = useState(false);
 
-  // ================= IMAGE HANDLERS =================
-
-
-  const handleImage = (e) => {
+  // ================= IMAGE UPLOAD HANDLER =================
+  const handleImage = async (e) => {
     const file = e.target.files[0];
-
-    if (!file) {
-      setIsError(true);
-      setMessage("Image upload failed");
-      return;
-    }
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       setIsError(true);
@@ -45,8 +35,37 @@ export default function VolunteerDashboard() {
       return;
     }
 
-    setIsError(false);
-    setMessage("Image has been successfully uploaded");
+    setUploading(true);
+    setMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("http://localhost:5000/api/volunteer/upload-image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        setIsError(false);
+        setMessage("Image uploaded successfully");
+      } else {
+        const data = await res.json();
+        setIsError(true);
+        setMessage(data.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setIsError(true);
+      setMessage("Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset input so same file can be uploaded again
+    }
   };
 
   // ================= ROUTE PROTECT =================
@@ -78,25 +97,25 @@ export default function VolunteerDashboard() {
     fetchDonations();
   }, []);
 
-  // ================= FETCH ALL DONATIONS =================
-  const fetchAllDonations = async () => {
-    setLoadingDonations(true);
+  // ================= FETCH MY IMAGES =================
+  const fetchMyImages = async () => {
+    setLoadingImages(true);
     try {
-      const res = await fetch("http://localhost:5000/api/volunteer/all-donations", {
+      const res = await fetch("http://localhost:5000/api/volunteer/my-images", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();
-      setAllDonations(data.donations || []);
+      setMyImages(data.images || []);
     } catch (error) {
-      console.error("Error fetching all donations:", error);
+      console.error("Error fetching images:", error);
     } finally {
-      setLoadingDonations(false);
+      setLoadingImages(false);
     }
   };
 
   const handleDonationsClick = () => {
     setActiveView("donations");
-    fetchAllDonations();
+    fetchMyImages();
   };
 
   // ================= STATUS UPDATE =================
@@ -145,14 +164,15 @@ export default function VolunteerDashboard() {
             Dashboard
           </li>
           <li className="font-semibold">
-            <label className="flex items-center gap-2 text-gray-700 font-medium mb-3 cursor-pointer">
+            <label className="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">
               <UploadIcon size={16} />
-              Upload Image
+              {uploading ? "Uploading..." : "Upload Image"}
               <input
                 type="file"
                 accept="image/*"
                 className="hidden"
                 onChange={handleImage}
+                disabled={uploading}
               />
             </label>
             {message && (
@@ -236,6 +256,7 @@ export default function VolunteerDashboard() {
                       </button>
                     ))}
                   </div>
+
                 </div>
               ))}
             </div>
@@ -243,69 +264,27 @@ export default function VolunteerDashboard() {
         ) : (
           /* ================= DONATIONS LIST VIEW ================= */
           <>
-            <h2 className="text-2xl font-bold mb-6">All Donations</h2>
+            <h2 className="text-2xl font-bold mb-6">Donations</h2>
 
-            {loadingDonations ? (
-              <p className="text-gray-500">Loading donations...</p>
-            ) : allDonations.length === 0 ? (
-              <p className="text-gray-500">No donations found.</p>
+            {loadingImages ? (
+              <p className="text-gray-500">Loading images...</p>
+            ) : myImages.length === 0 ? (
+              <p className="text-gray-500">No images uploaded yet.</p>
             ) : (
-              <div className="overflow-x-auto bg-white rounded-xl shadow-md">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-green-600 text-white">
-                    <tr>
-                      <th className="px-4 py-3">Title</th>
-                      <th className="px-4 py-3">Description</th>
-                      <th className="px-4 py-3">Donor</th>
-                      <th className="px-4 py-3">Location</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3">Accepted By</th>
-                      <th className="px-4 py-3">Volunteer</th>
-                      <th className="px-4 py-3">Proof Image</th>
-                      <th className="px-4 py-3">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allDonations.map((d) => (
-                      <tr key={d._id} className="border-b hover:bg-gray-50 transition">
-                        <td className="px-4 py-3 font-medium">{d.title}</td>
-                        <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">{d.description}</td>
-                        <td className="px-4 py-3">{d.donor?.name || "N/A"}</td>
-                        <td className="px-4 py-3">{d.city}, {d.state} - {d.pincode}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            d.status === "delivered" ? "bg-green-100 text-green-700" :
-                            d.status === "pending" ? "bg-yellow-100 text-yellow-700" :
-                            d.status === "accepted" ? "bg-blue-100 text-blue-700" :
-                            d.status === "assigned" ? "bg-purple-100 text-purple-700" :
-                            d.status === "on_the_way" ? "bg-orange-100 text-orange-700" :
-                            d.status === "collected" ? "bg-teal-100 text-teal-700" :
-                            "bg-gray-100 text-gray-700"
-                          }`}>
-                            {d.status?.replace(/_/g, " ").toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">{d.acceptedBy?.name || "-"}</td>
-                        <td className="px-4 py-3">{d.volunteerId?.name || "-"}</td>
-                        <td className="px-4 py-3">
-                          {d.proofImage ? (
-                            <button
-                              onClick={() => setViewImage(`http://localhost:5000${d.proofImage}`)}
-                              className="flex items-center gap-1 text-green-600 hover:text-green-800 font-medium"
-                            >
-                              <Eye size={16} /> View
-                            </button>
-                          ) : (
-                            <span className="text-gray-400">No image</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
-                          {new Date(d.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {myImages.map((img) => (
+                  <div
+                    key={img._id}
+                    className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition"
+                    onClick={() => setViewImage(`http://localhost:5000${img.imagePath}`)}
+                  >
+                    <img
+                      src={`http://localhost:5000${img.imagePath}`}
+                      alt="Uploaded"
+                      className="w-full h-48 object-cover"
+                    />
+                  </div>
+                ))}
               </div>
             )}
           </>
