@@ -14,7 +14,7 @@ export default function VolunteerDashboard() {
   const [isError, setIsError] = useState(false);
   // const [adminStatDataState, setAdminStatDataState] = useState({ totalDonors: 0 });
 
-  const statusFlow = ["assigned", "on_the_way", "collected", "delivered"];
+  const statusFlow = ["assigned", "on_the_way", "collected", "completed"];
   const steps = ["Pickup Donation", "Donation Picked Up", "Donation Delivered", "Donation Completed"];
 
   const [image, setImage] = useState(null);
@@ -85,7 +85,7 @@ export default function VolunteerDashboard() {
       setCounts({
         assigned: updatedDonations.filter(d => d.status === "accepted").length,
         ongoing: updatedDonations.filter(d => d.status === "pending").length,
-        completed: updatedDonations.filter(d => d.status === "delivered").length,
+        completed: updatedDonations.filter(d => d.status === "completed").length,
       });
 
       try {
@@ -143,15 +143,15 @@ export default function VolunteerDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-blue-500 text-white p-6 rounded-xl shadow">
+          <div className="bg-white p-6 rounded-xl shadow">
             <h4>Total Donors</h4>
             <p className="text-3xl mt-2">{counts.assigned}</p>
           </div>
-          <div className="bg-yellow-500 text-white p-6 rounded-xl shadow">
+          <div className="bg-white p-6 rounded-xl shadow">
             <h4>Ongoing Donations</h4>
             <p className="text-3xl mt-2">{counts.ongoing}</p>
           </div>
-          <div className="bg-green-600 text-white p-6 rounded-xl shadow">
+          <div className="bg-white p-6 rounded-xl shadow">
             <h4>Completed Donations</h4>
             <p className="text-3xl mt-2">{counts.completed}</p>
           </div>

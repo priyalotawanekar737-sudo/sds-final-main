@@ -16,3 +16,4 @@
    - `POST /api/donations` (auth header required)
    - `POST /api/donations/:id/accept` (auth)
    - `POST /api/donations/:id/status` (auth)
+   GET /api/admin/donor-count

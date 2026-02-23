@@ -88,7 +88,7 @@ export default function AdminManageNgo() {
                     {ngo.status !== "approved" && (
                       <button
                         onClick={() => updateStatus(ngo._id, "approved")}
-                        className="px-3 py-1 bg-green-600 text-white rounded"
+                        className="px-3 py-1 bg-green-500 text-white rounded"
                       >
                         Approve
                       </button>

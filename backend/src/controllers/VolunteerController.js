@@ -21,7 +21,7 @@ exports.getVolunteerDashboard = async (req, res) => {
     // Fetch volunteer's donations (assigned, ongoing, completed)
     const myDonations = await Donation.find({
       volunteerId,
-      status: { $in: ["accepted", "assigned", "pending", "on_the_way", "collected", "delivered"] }
+      status: { $in: ["accepted", "assigned", "pending", "on_the_way", "collected", "completed"] }
     })
       .populate("donor", "name")
       .sort({ createdAt: -1 });
@@ -55,7 +55,7 @@ exports.getVolunteerDashboard = async (req, res) => {
       // assigned: allAssigned.length + myDonations.filter(d => d.status === "accepted" || d.status === "assigned" || d.status === "pending").length,
       assigned: totalDonations,
       ongoing: onGoingDonors.length,
-      completed: myDonations.filter(d => d.status === "delivered" || d.status === "accepted").length
+      completed: myDonations.filter(d => d.status === "completed" || d.status === "accepted").length
     };
 
     res.json({

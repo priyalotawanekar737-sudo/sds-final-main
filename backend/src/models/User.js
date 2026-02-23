@@ -4,11 +4,13 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  role: { 
-    type: String, 
-    enum: ["admin", "donor", "ngo", "volunteer"],
-    default: "donor"
-  },
+  role: {
+  type: String,
+  enum: ["admin", "donor", "ngo", "volunteer"],
+  required: true,
+  lowercase: true,
+  trim: true
+},
   approved: {
     type: Boolean,
     default: false  // for NGO & volunteer approval

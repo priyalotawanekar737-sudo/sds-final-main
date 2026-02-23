@@ -119,7 +119,7 @@ export default function AdminNotifications() {
 
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           + Add Notification
         </button>
@@ -139,7 +139,7 @@ export default function AdminNotifications() {
           <button
             onClick={addNotification}
             disabled={loading}
-            className="bg-green-600 text-white px-4 py-2 rounded"
+            className="bg-green-500 text-white px-4 py-2 rounded"
           >
             {loading ? "Saving..." : "Save Notification"}
           </button>

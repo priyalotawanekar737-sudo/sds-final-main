@@ -93,7 +93,7 @@ const AssignedDonations = () => {
                 </button>
 
                 <button
-                  onClick={() => updateStatus(donation._id, "delivered")}
+                  onClick={() => updateStatus(donation._id, "completed")}
                   className="bg-green-600 text-white px-4 py-2 rounded-lg"
                 >
                   Delivered

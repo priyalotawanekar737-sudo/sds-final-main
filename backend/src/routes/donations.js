@@ -136,7 +136,7 @@ router.put(
       if (!donation)
         return res.status(404).json({ message: "Donation not found" });
 
-      donation.status = "delivered";
+      donation.status = "completed";
       donation.proofImage = `/uploads/${req.file.filename}`;
 
       await donation.save();

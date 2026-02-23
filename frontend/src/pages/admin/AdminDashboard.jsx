@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({
-    totalDonors: 0,
+    totalDonors:0,
     totalNGOs: 0,
     totalVolunteers: 0,
     totalDonations: 0
@@ -17,6 +17,7 @@ export default function AdminDashboard() {
 
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [donorCount, setDonorCount] = useState(0);
 
   // ================= ADMIN PROTECTION =================
   useEffect(() => {
@@ -67,11 +68,26 @@ export default function AdminDashboard() {
 
     loadData();
 
+    const fetchDonorCount = async () => {
+  try {
+    const authToken = token || localStorage.getItem("token");
+
+    const res = await axios.get(
+      "http://localhost:5000/api/admin/donor-count",
+      { headers: { Authorization: `Bearer ${authToken}` } }
+    );
+
+    setDonorCount(res.data.count);
+  } catch (err) {
+    console.error("Error fetching donor count:", err);
+  }
+};
     // Auto refresh every 5 seconds
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
 
   }, [token]);
+  
 
   // ================= ADMIN ACTIONS =================
 
@@ -131,16 +147,7 @@ export default function AdminDashboard() {
           <p className="text-gray-600">Admin Control Panel</p>
         </div>
 
-        <button
-          onClick={() => {
-            logout();
-            localStorage.clear();
-            navigate("/admin-login");
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded"
-        >
-          Logout
-        </button>
+        
       </div>
 
       {/* ================= STATS ================= */}
@@ -199,7 +206,7 @@ export default function AdminDashboard() {
                     {d.status === "assigned" && (
                       <button
                         onClick={() => markCompleted(d._id)}
-                        className="bg-green-600 text-white px-3 py-1 rounded"
+                        className="bg-green-500 text-white px-3 py-1 rounded"
                       >
                         Complete
                       </button>

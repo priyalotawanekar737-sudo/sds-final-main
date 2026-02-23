@@ -25,7 +25,7 @@ const donationSchema = new mongoose.Schema(
         "assigned",
         "on_the_way",
         "collected",
-        "delivered",
+        "completed",
       ],
       default: "pending",
     },

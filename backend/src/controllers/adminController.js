@@ -11,8 +11,8 @@ exports.getDashboardStats = async (req, res) => {
 
     const [totalDonors, totalVolunteers, totalNGOs, totalDonations] =
       await Promise.all([
-        User.countDocuments({ role: "donor" }),
-        User.countDocuments({ role: "volunteer" }),
+        User.countDocuments({ role: { $regex: "^donor$", $options: "i" } }),
+        User.countDocuments({ role: { $regex: "^volunteer$", $options: "i" } }),
         Ngo.countDocuments({ status: "approved" }),
         Donation.countDocuments()
       ]);
@@ -23,6 +23,7 @@ exports.getDashboardStats = async (req, res) => {
       totalNGOs,
       totalDonations
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Server error" });

@@ -17,7 +17,7 @@ const volunteers = [
   { name: "vol5", email: "vol5@donation.com" },
 ];
 
-const User = require("./src/models/User"); 
+//const User = require("./src/models/User"); 
 
 async function createVolunteers() {
   try {
