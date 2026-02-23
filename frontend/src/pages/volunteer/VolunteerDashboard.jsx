@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { LogOut } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { LogOut, Package, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import UploadIcon from "../../icons/UploadIcon";
@@ -17,21 +17,17 @@ export default function VolunteerDashboard() {
   const statusFlow = ["assigned", "on_the_way", "collected", "completed"];
   const steps = ["Pickup Donation", "Donation Picked Up", "Donation Delivered", "Donation Completed"];
 
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const inputRef = useRef();
+  // Donations view state
+  const [activeView, setActiveView] = useState("dashboard"); // "dashboard" or "donations"
+  const [myImages, setMyImages] = useState([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [viewImage, setViewImage] = useState(null); // for image modal
+  const [uploading, setUploading] = useState(false);
 
-  // ================= IMAGE HANDLERS =================
-
-
-  const handleImage = (e) => {
+  // ================= IMAGE UPLOAD HANDLER =================
+  const handleImage = async (e) => {
     const file = e.target.files[0];
-
-    if (!file) {
-      setIsError(true);
-      setMessage("Image upload failed");
-      return;
-    }
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       setIsError(true);
@@ -39,8 +35,37 @@ export default function VolunteerDashboard() {
       return;
     }
 
-    setIsError(false);
-    setMessage("Image has been successfully uploaded");
+    setUploading(true);
+    setMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("http://localhost:5000/api/volunteer/upload-image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        setIsError(false);
+        setMessage("Image uploaded successfully");
+      } else {
+        const data = await res.json();
+        setIsError(true);
+        setMessage(data.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setIsError(true);
+      setMessage("Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset input so same file can be uploaded again
+    }
   };
 
   // ================= ROUTE PROTECT =================
@@ -71,6 +96,27 @@ export default function VolunteerDashboard() {
   useEffect(() => {
     fetchDonations();
   }, []);
+
+  // ================= FETCH MY IMAGES =================
+  const fetchMyImages = async () => {
+    setLoadingImages(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/volunteer/my-images", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      const data = await res.json();
+      setMyImages(data.images || []);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
+  const handleDonationsClick = () => {
+    setActiveView("donations");
+    fetchMyImages();
+  };
 
   // ================= STATUS UPDATE =================
   const handleStatusClick = async (donation) => {
@@ -111,16 +157,22 @@ export default function VolunteerDashboard() {
       <aside className="w-64 bg-white shadow-lg p-6">
         <h2 className="text-2xl font-bold text-green-600 mb-8">Volunteer Panel</h2>
         <ul className="space-y-4 text-gray-700">
-          <li className="font-semibold">Dashboard</li>
+          <li
+            className={`font-semibold cursor-pointer px-3 py-2 rounded-lg transition ${activeView === "dashboard" ? "bg-green-50 text-green-700" : "hover:bg-gray-100"}`}
+            onClick={() => setActiveView("dashboard")}
+          >
+            Dashboard
+          </li>
           <li className="font-semibold">
-            <label className="flex items-center gap-2 text-gray-700 font-medium mb-3 cursor-pointer">
+            <label className="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">
               <UploadIcon size={16} />
-              Upload Image
+              {uploading ? "Uploading..." : "Upload Image"}
               <input
                 type="file"
                 accept="image/*"
                 className="hidden"
                 onChange={handleImage}
+                disabled={uploading}
               />
             </label>
             {message && (
@@ -128,6 +180,13 @@ export default function VolunteerDashboard() {
                 {message}
               </p>
             )}
+          </li>
+          <li
+            className={`font-semibold cursor-pointer px-3 py-2 rounded-lg transition flex items-center gap-2 ${activeView === "donations" ? "bg-green-50 text-green-700" : "hover:bg-gray-100"}`}
+            onClick={handleDonationsClick}
+          >
+            <Package size={16} />
+            Donations
           </li>
 
         </ul>
@@ -141,65 +200,116 @@ export default function VolunteerDashboard() {
         <h1 className="text-3xl font-bold mb-1">Welcome, {user.name} 🙌</h1>
         <p className="text-gray-600 mb-8">Email: {user.email}</p>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h4>Total Donors</h4>
-            <p className="text-3xl mt-2">{counts.assigned}</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h4>Ongoing Donations</h4>
-            <p className="text-3xl mt-2">{counts.ongoing}</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h4>Completed Donations</h4>
-            <p className="text-3xl mt-2">{counts.completed}</p>
-          </div>
-        </div>
-
-        {/* Donations */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {donations.length === 0 && <p className="text-gray-500">No donations assigned yet.</p>}
-
-          {donations.map((donation) => (
-            <div key={donation._id} className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="font-semibold text-gray-800 mb-2">Donor: {donation.donorName}</h3>
-              <p className="text-sm text-gray-500 mb-4">Location: {donation.location}</p>
-
-              <div className="flex gap-2 mb-4">
-                {steps.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-2 flex-1 rounded-full ${statusFlow.indexOf(donation.status) >= index
-                      ? "bg-green-500"
-                      : "bg-gray-300"
-                      }`}
-                  />
-                ))}
+        {activeView === "dashboard" ? (
+          <>
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-blue-500 text-white p-6 rounded-xl shadow">
+                <h4>Total Donors</h4>
+                <p className="text-3xl mt-2">{counts.assigned}</p>
               </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {steps.map((label, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleStatusClick(donation)}
-                    // disabled={statusFlow.indexOf(donation.status) !== index}
-                    className={`py-2 px-3 rounded-lg transition ${statusFlow.indexOf(donation.status) > index
-                      ? "bg-green-100 text-green-700 font-medium"
-                      : "bg-gray-100 text-gray-500"
-                      } ${statusFlow.indexOf(donation.status) === index
-                        ? "ring-2 ring-green-400"
-                        : ""
-                      }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <div className="bg-yellow-500 text-white p-6 rounded-xl shadow">
+                <h4>Ongoing Donations</h4>
+                <p className="text-3xl mt-2">{counts.ongoing}</p>
+              </div>
+              <div className="bg-green-600 text-white p-6 rounded-xl shadow">
+                <h4>Completed Donations</h4>
+                <p className="text-3xl mt-2">{counts.completed}</p>
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Donations */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {donations.length === 0 && <p className="text-gray-500">No donations assigned yet.</p>}
+
+              {donations.map((donation) => (
+                <div key={donation._id} className="bg-white rounded-xl shadow-md p-6">
+                  <h3 className="font-semibold text-gray-800 mb-2">Donor: {donation.donorName}</h3>
+                  <p className="text-sm text-gray-500 mb-4">Location: {donation.location}</p>
+
+                  <div className="flex gap-2 mb-4">
+                    {steps.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`h-2 flex-1 rounded-full ${statusFlow.indexOf(donation.status) >= index
+                          ? "bg-green-500"
+                          : "bg-gray-300"
+                          }`}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {steps.map((label, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleStatusClick(donation)}
+                        className={`py-2 px-3 rounded-lg transition ${statusFlow.indexOf(donation.status) > index
+                          ? "bg-green-100 text-green-700 font-medium"
+                          : "bg-gray-100 text-gray-500"
+                          } ${statusFlow.indexOf(donation.status) === index
+                            ? "ring-2 ring-green-400"
+                            : ""
+                          }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          /* ================= DONATIONS LIST VIEW ================= */
+          <>
+            <h2 className="text-2xl font-bold mb-6">Donations</h2>
+
+            {loadingImages ? (
+              <p className="text-gray-500">Loading images...</p>
+            ) : myImages.length === 0 ? (
+              <p className="text-gray-500">No images uploaded yet.</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {myImages.map((img) => (
+                  <div
+                    key={img._id}
+                    className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition"
+                    onClick={() => setViewImage(`http://localhost:5000${img.imagePath}`)}
+                  >
+                    <img
+                      src={`http://localhost:5000${img.imagePath}`}
+                      alt="Uploaded"
+                      className="w-full h-48 object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </main>
+
+      {/* ================= IMAGE MODAL ================= */}
+      {viewImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-4 max-w-lg w-full mx-4 relative">
+            <button
+              onClick={() => setViewImage(null)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+            >
+              <X size={24} />
+            </button>
+            <h3 className="text-lg font-semibold mb-3">Proof Image</h3>
+            <img
+              src={viewImage}
+              alt="Donation proof"
+              className="w-full rounded-lg object-contain max-h-[400px]"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

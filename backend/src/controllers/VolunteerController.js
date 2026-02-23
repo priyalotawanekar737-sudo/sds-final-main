@@ -1,5 +1,6 @@
 const Donation = require("../models/Donation");
 const Users = require("../models/User");
+const VolunteerImage = require("../models/VolunteerImage");
 const mongoose = require("mongoose");
 
 // GET volunteer dashboard
@@ -65,6 +66,36 @@ exports.getVolunteerDashboard = async (req, res) => {
 
   } catch (err) {
     console.error("Error in getVolunteerDashboard:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// UPLOAD image (free upload, not tied to a donation)
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "No image file provided" });
+
+    const image = await VolunteerImage.create({
+      volunteerId: req.user.id,
+      imagePath: `/uploads/${req.file.filename}`,
+    });
+
+    res.status(201).json({ message: "Image uploaded successfully", image });
+  } catch (err) {
+    console.error("Error in uploadImage:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// GET all images uploaded by this volunteer
+exports.getMyImages = async (req, res) => {
+  try {
+    const images = await VolunteerImage.find({ volunteerId: req.user.id })
+      .sort({ createdAt: -1 });
+
+    res.json({ images });
+  } catch (err) {
+    console.error("Error in getMyImages:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
