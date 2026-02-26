@@ -129,8 +129,8 @@ export default function VolunteerDashboard() {
       );
       setDonations(updatedDonations);
       setCounts({
-        assigned: updatedDonations.filter(d => d.status === "accepted").length,
-        ongoing: updatedDonations.filter(d => d.status === "pending").length,
+        assigned: updatedDonations.length,
+        ongoing: updatedDonations.filter(d => d.status === "on_the_way" || d.status === "collected").length,
         completed: updatedDonations.filter(d => d.status === "completed").length,
       });
 
@@ -205,7 +205,7 @@ export default function VolunteerDashboard() {
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               <div className="bg-blue-500 text-white p-6 rounded-xl shadow">
-                <h4>Total Donors</h4>
+                <h4>My Assigned Donations</h4>
                 <p className="text-3xl mt-2">{counts.assigned}</p>
               </div>
               <div className="bg-yellow-500 text-white p-6 rounded-xl shadow">
