@@ -35,7 +35,7 @@ export default function LoginAdminVolunteer() {
 
       // Redirect based on role
       if (user.role === "admin") {
-        navigate("/admin"); // AdminLayout with AdminDashboard
+        navigate("/admin-dashboard"); // AdminLayout with AdminDashboard
       } else if (user.role === "volunteer") {
         navigate("/volunteer-dashboard"); // Volunteer dashboard
       }

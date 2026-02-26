@@ -1,41 +1,35 @@
 import { useState, useEffect } from "react";
-import api from "../../api"; // Make sure this points to your axios instance
+import api from "../../api";
 
 export default function NgoDonations({
   donations,
-  setDonations,
   acceptDonation,
   assignVolunteer,
-  token,
+  markCompleted,
 }) {
   const [stateFilter, setStateFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [volunteers, setVolunteers] = useState([]);
-  const [loadingVolunteers, setLoadingVolunteers] = useState(true);
+  const [loadingVolunteers, setLoadingVolunteers] = useState(false);
 
-  // Fetch volunteers from backend
   useEffect(() => {
-    if (token) {
-      const fetchVolunteers = async () => {
-        try {
-          setLoadingVolunteers(true);
-          const res = await api.get("/users", {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { role: "volunteer" },
-          });
-          setVolunteers(res.data);
-        } catch (err) {
-          console.error("Error fetching volunteers:", err);
-        } finally {
-          setLoadingVolunteers(false);
-        }
-      };
-      fetchVolunteers();
-    }
-  }, [token]);
+    const fetchVolunteers = async () => {
+      try {
+        setLoadingVolunteers(true);
+        const res = await api.get("/users/volunteers");
+        setVolunteers(res.data);
+      } catch (err) {
+        console.error("Error fetching volunteers:", err);
+      } finally {
+        setLoadingVolunteers(false);
+      }
+    };
 
-  // Unique states & cities for dropdown
+    fetchVolunteers();
+  }, []);
+
   const states = [...new Set(donations.map((d) => d.state).filter(Boolean))];
+
   const cities = [
     ...new Set(
       donations
@@ -45,24 +39,16 @@ export default function NgoDonations({
     ),
   ];
 
-  // Apply filters
   const filteredDonations = donations.filter(
     (d) =>
       (!stateFilter || d.state === stateFilter) &&
       (!cityFilter || d.city === cityFilter)
   );
 
-  const markCompleted = (id) => {
-    setDonations((prev) =>
-      prev.map((d) => (d._id === id ? { ...d, status: "completed" } : d))
-    );
-  };
-
   return (
     <div>
       <h3 className="text-xl font-bold mb-4">Manage Donations</h3>
 
-      {/* ================= FILTERS ================= */}
       <div className="flex gap-4 mb-6">
         <select
           className="border p-2 rounded"
@@ -94,7 +80,6 @@ export default function NgoDonations({
         </select>
       </div>
 
-      {/* ================= DONATIONS ================= */}
       <div className="grid md:grid-cols-2 gap-6">
         {filteredDonations.map((d) => (
           <div key={d._id} className="bg-white p-4 rounded shadow">
@@ -117,7 +102,6 @@ export default function NgoDonations({
               </span>
             </p>
 
-            {/* ================= ACTIONS ================= */}
             {d.status === "pending" && (
               <button
                 onClick={() => acceptDonation(d._id)}
@@ -130,8 +114,10 @@ export default function NgoDonations({
             {d.status === "accepted" && (
               <div className="mt-3">
                 <select
-                  className="border p-1"
-                  onChange={(e) => assignVolunteer(d._id, e.target.value)}
+                  className="border p-2 rounded w-full"
+                  onChange={(e) =>
+                    assignVolunteer(d._id, e.target.value)
+                  }
                   defaultValue=""
                   disabled={loadingVolunteers || volunteers.length === 0}
                 >
@@ -142,9 +128,12 @@ export default function NgoDonations({
                       ? "No volunteers available"
                       : "Assign Volunteer"}
                   </option>
+
                   {volunteers.map((v) => (
                     <option key={v._id} value={v._id}>
                       {v.name}
+                      {v.assignedCount !== undefined &&
+                        ` (${v.assignedCount} active tasks)`}
                     </option>
                   ))}
                 </select>

@@ -152,9 +152,9 @@ export default function VolunteerDashboard() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
       {/* ================= SIDEBAR ================= */}
-      <aside className="w-64 bg-white shadow-lg p-6">
+      <aside className="w-full md:w-64 bg-white shadow-lg p-6">
         <h2 className="text-2xl font-bold text-green-600 mb-8">Volunteer Panel</h2>
         <ul className="space-y-4 text-gray-700">
           <li

@@ -80,7 +80,27 @@ router.post("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Error creating donation" });
   }
 });
+// DELETE donation (Donor only)
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const donation = await Donation.findById(req.params.id);
 
+    if (!donation) {
+      return res.status(404).json({ message: "Donation not found" });
+    }
+
+    // Only donor who created it can delete
+    if (donation.donor.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    await donation.deleteOne();
+
+    res.json({ message: "Donation deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 // ✅ ACCEPT DONATION (NGO)
 router.put("/:id/accept", authMiddleware, async (req, res) => {
   try {

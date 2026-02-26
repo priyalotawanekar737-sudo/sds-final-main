@@ -1,90 +1,89 @@
-import React from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import React, { useState } from "react";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 
-// Existing pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
+// Main pages
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import About from "./pages/About";
+import Initiatives from "./pages/Initiatives";
 
-// New pages for Admin/Volunteer
-import LoginAdminVolunteer from './pages/LoginAdminVolunteer';
-import AdminDashboard from './pages//admin/AdminDashboard';
-import VolunteerDashboard from './pages/volunteer/VolunteerDashboard';
-import ManageDonations from './pages/admin/ManageDonations';
-import ManageVolunteers from './pages/admin/ManageVolunteers';
+// Admin / Volunteer
+import LoginAdminVolunteer from "./pages/LoginAdminVolunteer";
+import VolunteerDashboard from "./pages/volunteer/VolunteerDashboard";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageDonations from "./pages/admin/ManageDonations";
+import ManageVolunteers from "./pages/admin/ManageVolunteers";
 import AdminNotifications from "./pages/admin/AdminNotifications";
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminManageNgo from "./pages/admin/AdminManageNgo";
 
 export default function App() {
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Hide navbar on these routes
-  const hideNavbarRoutes = [
-    '/',
-    '/login',
-    '/register',
-    '/admin-login'
-  ];
+  const hideNavbarRoutes = ["/", "/login", "/register", "/admin-login"];
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      {/* Navbar (hidden on login pages + home) */}
+      {/* NAVBAR */}
       {!hideNavbarRoutes.includes(location.pathname) && (
-        <nav className="bg-white shadow p-4">
-          <div className="container mx-auto flex gap-4">
-            <Link to="/" className="font-bold text-blue-700 hover:text-blue-900 transition">
+        <nav className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <Link to="/" className="text-xl font-bold text-blue-700">
               Smart Donation System
             </Link>
 
-            <Link to="/dashboard" className="hover:text-blue-600">
-              Dashboard
-            </Link>
+            {/* Desktop Menu */}
+            <div className="hidden md:flex gap-6">
+              <Link to="/about">About</Link>
+              <Link to="/initiatives">Initiatives</Link>
+              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/login">Donor/NGO Login</Link>
+              <Link to="/admin-login">Admin/Volunteer Login</Link>
+              <Link to="/register">Register</Link>
+            </div>
 
-            <Link to="/login" className="hover:text-blue-600">
-              Donor/NGO Login
-            </Link>
-
-            <Link to="/admin-login" className="hover:text-blue-600">
-              Admin/Volunteer Login
-            </Link>
-
-            <Link to="/register" className="hover:text-blue-600">
-              Register
-            </Link>
+            {/* Mobile Button */}
+            <button
+              className="md:hidden text-gray-700"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              ☰
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {menuOpen && (
+            <div className="md:hidden px-4 pb-4 flex flex-col gap-3">
+              <Link to="/about">About</Link>
+              <Link to="/initiatives">Initiatives</Link>
+              <Link to="/dashboard">Dashboard</Link>
+              <Link to="/login">Donor/NGO Login</Link>
+              <Link to="/admin-login">Admin/Volunteer Login</Link>
+              <Link to="/register">Register</Link>
+            </div>
+          )}
         </nav>
       )}
 
-      {/* Page Content */}
-      <div className="container mx-auto p-6">
+      {/* PAGE CONTENT */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
         <Routes>
-          {/* Existing routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/initiatives" element={<Initiatives />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
-
-          {/* New admin & volunteer routes */}
           <Route path="/admin-login" element={<LoginAdminVolunteer />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/volunteer-dashboard" element={<VolunteerDashboard />} />
-             <Route path="/admin-donations" element={<ManageDonations />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin-donations" element={<ManageDonations />} />
           <Route path="/admin-volunteers" element={<ManageVolunteers />} />
-          <Route path="/admin/notifications" element={<AdminNotifications />} />
-          <Route path="/admin" element={<AdminLayout />}>
-  <Route path="donations" element={<ManageDonations />} />
-  <Route path="volunteers" element={<ManageVolunteers />} />
-  <Route path="ngos" element={<AdminManageNgo />} />
- 
-
-
-   </Route>
+          <Route path="/admin-notifications" element={<AdminNotifications />} />
         </Routes>
       </div>
     </div>
   );
 }
- 

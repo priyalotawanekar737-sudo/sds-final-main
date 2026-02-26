@@ -5,19 +5,18 @@ import { useAuth } from "../../context/AuthContext";
 import AdminLayout from "./AdminLayout";
 
 export default function AdminDashboard() {
-  const { user, token, logout } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
 
   const [stats, setStats] = useState({
-    totalDonors:0,
+    totalDonors: 0,
     totalNGOs: 0,
     totalVolunteers: 0,
-    totalDonations: 0
+    totalDonations: 0,
   });
 
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [donorCount, setDonorCount] = useState(0);
 
   // ================= ADMIN PROTECTION =================
   useEffect(() => {
@@ -28,13 +27,15 @@ export default function AdminDashboard() {
       return;
     }
 
-    if ((user && user.role !== "admin") ||
-        (savedUser && savedUser.role !== "admin")) {
+    if (
+      (user && user.role !== "admin") ||
+      (savedUser && savedUser.role !== "admin")
+    ) {
       navigate("/admin-login");
     }
   }, [user, navigate]);
 
-  // ================= LOAD DASHBOARD DATA =================
+  // ================= LOAD DATA =================
   useEffect(() => {
     const authToken = token || localStorage.getItem("token");
 
@@ -47,11 +48,11 @@ export default function AdminDashboard() {
       try {
         const [statsRes, donationsRes] = await Promise.all([
           axios.get("http://localhost:5000/api/admin/stats", {
-            headers: { Authorization: `Bearer ${authToken}` }
+            headers: { Authorization: `Bearer ${authToken}` },
           }),
           axios.get("http://localhost:5000/api/admin/donations", {
-            headers: { Authorization: `Bearer ${authToken}` }
-          })
+            headers: { Authorization: `Bearer ${authToken}` },
+          }),
         ]);
 
         setStats(statsRes.data);
@@ -68,47 +69,12 @@ export default function AdminDashboard() {
 
     loadData();
 
-    const fetchDonorCount = async () => {
-  try {
-    const authToken = token || localStorage.getItem("token");
-
-    const res = await axios.get(
-      "http://localhost:5000/api/admin/donor-count",
-      { headers: { Authorization: `Bearer ${authToken}` } }
-    );
-
-    setDonorCount(res.data.count);
-  } catch (err) {
-    console.error("Error fetching donor count:", err);
-  }
-};
-    // Auto refresh every 5 seconds
+    // Auto refresh every 5 seconds (NOT 1 second)
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
-
   }, [token]);
-  
 
-  // ================= ADMIN ACTIONS =================
-
-  const acceptDonation = async (id) => {
-    try {
-      const authToken = token || localStorage.getItem("token");
-
-      const res = await axios.put(
-        `http://localhost:5000/api/donations/${id}/accept`,
-        {},
-        { headers: { Authorization: `Bearer ${authToken}` } }
-      );
-
-      setDonations(prev =>
-        prev.map(d => (d._id === id ? res.data.donation : d))
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+  // ================= ACTION =================
   const markCompleted = async (id) => {
     try {
       const authToken = token || localStorage.getItem("token");
@@ -119,15 +85,14 @@ export default function AdminDashboard() {
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
-      setDonations(prev =>
-        prev.map(d => (d._id === id ? res.data.donation : d))
+      setDonations((prev) =>
+        prev.map((d) => (d._id === id ? res.data.donation : d))
       );
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ================= LOADING STATE =================
   if (loading) {
     return (
       <AdminLayout>
@@ -139,84 +104,101 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">
-            Welcome, {user?.name || JSON.parse(localStorage.getItem("user"))?.name}
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Welcome,{" "}
+            {user?.name ||
+              JSON.parse(localStorage.getItem("user"))?.name}
           </h1>
           <p className="text-gray-600">Admin Control Panel</p>
         </div>
-
-        
       </div>
 
       {/* ================= STATS ================= */}
-      <div className="grid md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-xl shadow">
           <p className="text-gray-500">Donors</p>
-          <h2 className="text-3xl font-bold">{stats.totalDonors}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">
+            {stats.totalDonors}
+          </h2>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow">
           <p className="text-gray-500">NGOs</p>
-          <h2 className="text-3xl font-bold">{stats.totalNGOs}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">
+            {stats.totalNGOs}
+          </h2>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow">
           <p className="text-gray-500">Volunteers</p>
-          <h2 className="text-3xl font-bold">{stats.totalVolunteers}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">
+            {stats.totalVolunteers}
+          </h2>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow">
           <p className="text-gray-500">Total Donations</p>
-          <h2 className="text-3xl font-bold">{stats.totalDonations}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">
+            {stats.totalDonations}
+          </h2>
         </div>
       </div>
 
       {/* ================= DONATIONS TABLE ================= */}
       <div className="mt-10 bg-white rounded-xl shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Manage Donations</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Manage Donations
+        </h2>
 
-        <table className="w-full">
-          <thead>
-            <tr className="border-b text-gray-600">
-              <th className="text-left py-2">Donor</th>
-              <th className="text-left py-2">City</th>
-              <th className="text-left py-2">Status</th>
-              
-            </tr>
-          </thead>
-
-          <tbody>
-            {donations.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center py-4 text-gray-500">
-                  No donations found
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm md:text-base">
+            <thead>
+              <tr className="border-b text-gray-600">
+                <th className="text-left py-2 px-2">Donor</th>
+                <th className="text-left py-2 px-2">City</th>
+                <th className="text-left py-2 px-2">Status</th>
+                <th className="text-left py-2 px-2">Action</th>
               </tr>
-            ) : (
-              donations.map(d => (
-                <tr key={d._id} className="border-t">
-                  <td className="py-2">{d.donor?.name || "N/A"}</td>
-                  <td>{d.city}</td>
-                  <td className="capitalize">{d.status}</td>
-                  <td>
-                  
+            </thead>
 
-                    {d.status === "assigned" && (
-                      <button
-                        onClick={() => markCompleted(d._id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded"
-                      >
-                        Complete
-                      </button>
-                    )}
+            <tbody>
+              {donations.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="text-center py-4 text-gray-500"
+                  >
+                    No donations found
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                donations.map((d) => (
+                  <tr key={d._id} className="border-t">
+                    <td className="py-2 px-2">
+                      {d.donor?.name || "N/A"}
+                    </td>
+                    <td className="px-2">{d.city}</td>
+                    <td className="capitalize px-2">
+                      {d.status}
+                    </td>
+                    <td className="px-2">
+                      {d.status === "assigned" && (
+                        <button
+                          onClick={() => markCompleted(d._id)}
+                          className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Complete
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </AdminLayout>
   );
