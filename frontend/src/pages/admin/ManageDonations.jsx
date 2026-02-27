@@ -88,7 +88,7 @@ export default function ManageDonations() {
 
         <tbody>
           {getFilteredDonations().map((d) => (
-            <tr key={d._id} className="border-t">
+            <tr key={d._id} className="border-t bg-white">
               <td className="p-2">{d.title}</td>
               <td className="p-2">{d.city}</td>
               <td className="p-2 capitalize">
@@ -106,7 +106,7 @@ export default function ManageDonations() {
                   {d.status}
                 </span>
               </td>
-              <td className="p-2">
+              <td className="p-3">
                 {d.volunteerId?.name || "Not Assigned"}
               </td>
             </tr>
