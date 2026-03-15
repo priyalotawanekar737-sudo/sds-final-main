@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const path = require("path");
 const mongoose = require("mongoose");
 
+
 dotenv.config();
 
 const connectDB = require("./src/config/db");
@@ -76,4 +77,6 @@ const startServer = async () => {
   }
 };
 
+
 startServer();
+module.exports = app;

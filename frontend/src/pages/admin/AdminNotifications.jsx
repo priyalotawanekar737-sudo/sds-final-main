@@ -19,7 +19,7 @@ export default function AdminNotifications() {
   const fetchNotifications = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/notifications/admin",
+        "https://backend-psi-lemon-43.vercel.app/api/notifications/admin",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -36,7 +36,7 @@ export default function AdminNotifications() {
   const markRead = async (id) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/notifications/${id}/read`,
+        `https://backend-psi-lemon-43.vercel.app/api/notifications/${id}/read`,
         {},
         {
           headers: {
@@ -61,7 +61,7 @@ export default function AdminNotifications() {
       setLoading(true);
 
       await axios.post(
-        "http://localhost:5000/api/notifications",
+        "https://backend-psi-lemon-43.vercel.app/api/notifications",
         {
           message,
           role: "admin",
@@ -95,7 +95,7 @@ export default function AdminNotifications() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/notifications/${id}`,
+        `https://backend-psi-lemon-43.vercel.app/api/notifications/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

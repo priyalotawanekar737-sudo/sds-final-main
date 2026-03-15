@@ -23,7 +23,7 @@ export default function ManageVolunteers() {
     try {
       setLoading(true);
       const res = await axios.get(
-        "http://localhost:5000/api/admin/volunteers",
+        "https://backend-psi-lemon-43.vercel.app/api/admin/volunteers",
         {
           headers: { Authorization: `Bearer ${token}` },
         }

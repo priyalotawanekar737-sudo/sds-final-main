@@ -13,7 +13,7 @@ export default function ManageDonations() {
   // 🔹 Fetch Donations
   const fetchDonations = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/donations", {
+      const res = await axios.get("https://backend-psi-lemon-43.vercel.app/api/donations", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

@@ -46,10 +46,10 @@ export default function AdminDashboard() {
     const loadData = async () => {
       try {
         const [statsRes, donationsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/admin/stats", {
+          axios.get("https://backend-psi-lemon-43.vercel.app/api/admin/stats", {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
-          axios.get("http://localhost:5000/api/admin/donations", {
+          axios.get("https://backend-psi-lemon-43.vercel.app/api/admin/donations", {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
         ]);
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
       const authToken = token || localStorage.getItem("token");
 
       const res = await axios.put(
-        `http://localhost:5000/api/donations/${id}/complete`,
+        `https://backend-psi-lemon-43.vercel.app/api/donations/${id}/complete`,
         {},
         { headers: { Authorization: `Bearer ${authToken}` } }
       );

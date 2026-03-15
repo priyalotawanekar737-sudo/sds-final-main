@@ -42,7 +42,7 @@ export default function VolunteerDashboard() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("http://localhost:5000/api/volunteer/upload-image", {
+      const res = await fetch("https://backend-psi-lemon-43.vercel.app/api/volunteer/upload-image", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -81,7 +81,7 @@ export default function VolunteerDashboard() {
   // ================= FETCH DATA =================
   const fetchDonations = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/volunteer/dashboard", {
+      const res = await fetch("https://backend-psi-lemon-43.vercel.app/api/volunteer/dashboard", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -101,7 +101,7 @@ export default function VolunteerDashboard() {
   const fetchMyImages = async () => {
     setLoadingImages(true);
     try {
-      const res = await fetch("http://localhost:5000/api/volunteer/my-images", {
+      const res = await fetch("https://backend-psi-lemon-43.vercel.app/api/volunteer/my-images", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await res.json();
@@ -135,7 +135,7 @@ export default function VolunteerDashboard() {
       });
 
       try {
-        await fetch(`http://localhost:5000/api/volunteer/donation/${donation._id}/status`, {
+        await fetch(`https://backend-psi-lemon-43.vercel.app/api/volunteer/donation/${donation._id}/status`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -276,10 +276,10 @@ export default function VolunteerDashboard() {
                   <div
                     key={img._id}
                     className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition"
-                    onClick={() => setViewImage(`http://localhost:5000${img.imagePath}`)}
+                    onClick={() => setViewImage(`https://backend-psi-lemon-43.vercel.app${img.imagePath}`)}
                   >
                     <img
-                      src={`http://localhost:5000${img.imagePath}`}
+                      src={`https://backend-psi-lemon-43.vercel.app${img.imagePath}`}
                       alt="Uploaded"
                       className="w-full h-48 object-cover"
                     />

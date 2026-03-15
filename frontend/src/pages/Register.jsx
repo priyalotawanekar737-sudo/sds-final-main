@@ -88,7 +88,7 @@ export default function Register() {
     if (!validate()) return;
 
     try {
-      await axios.post('http://localhost:5000/api/auth/register', formData);
+      await axios.post('https://backend-psi-lemon-43.vercel.app/api/auth/register', formData);
       navigate('/login');
     } catch (err) {
       setServerError('Registration failed. Please try again.');

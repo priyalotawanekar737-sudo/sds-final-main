@@ -26,7 +26,7 @@ export default function AdminManageNgo() {
   const fetchNGOs = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/admin/ngos",
+        "https://backend-psi-lemon-43.vercel.app/api/admin/ngos",
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -42,7 +42,7 @@ export default function AdminManageNgo() {
   const updateStatus = async (ngoId, status) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/admin/ngos/${ngoId}`,
+        `https://backend-psi-lemon-43.vercel.app/api/admin/ngos/${ngoId}`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` }
